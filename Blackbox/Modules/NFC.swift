@@ -70,7 +70,7 @@ final class NFCBench: NSObject, ObservableObject {
                 let hex = (data + Data([sw1, sw2])).map { String(format: "%02X", $0) }.joined(separator: " ")
                 self.response = hex
                 self.status = String(format: "SW %02X%02X", sw1, sw2)
-                CaseLog.shared.finding("RAD-02", "APDU \(self.apdu) â†’ \(hex)")
+                CaseLog.shared.finding("RAD-02", "APDU \(self.apdu) -> \(hex)")
             }
         }
     }

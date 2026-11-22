@@ -4,9 +4,8 @@ import Network
 struct Announcement: Identifiable, Hashable {
     let name: String
     let type: String
-    let host: String?
 
-    var id: String { "\(type)-\(name)-\(host ?? "")" }
+    var id: String { "\(type)-\(name)" }
 }
 
 @MainActor
@@ -49,6 +48,7 @@ final class AnnouncementBrowser: ObservableObject {
     }
 
     func stop() {
+        guard isBrowsing else { return }
         browsers.forEach { $0.cancel() }
         browsers = []
         isBrowsing = false
@@ -58,7 +58,7 @@ final class AnnouncementBrowser: ObservableObject {
     private func absorb(_ results: Set<NWBrowser.Result>, type: String) {
         for result in results {
             guard case let .service(name, _, _, _) = result.endpoint else { continue }
-            let item = Announcement(name: name, type: type, host: nil)
+            let item = Announcement(name: name, type: type)
             guard !found.contains(item) else { continue }
             found.append(item)
             Haptics.tap()

@@ -74,7 +74,7 @@ struct OSINTView: View {
                         }
                         .buttonStyle(DeckButtonStyle())
                     }
-                    Text(busy ? "workingâ€¦" : (result.isEmpty ? "â€”" : result))
+                    Text(busy ? "working..." : (result.isEmpty ? "-" : result))
                         .font(.mono(11))
                         .foregroundStyle(result.isEmpty ? Palette.dim : Palette.paper)
                         .textSelection(.enabled)

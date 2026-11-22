@@ -8,6 +8,7 @@ enum Recon {
             URLQueryItem(name: "type", value: type)
         ]
         var request = URLRequest(url: components.url!)
+        request.timeoutInterval = 15
         request.setValue("application/dns-json", forHTTPHeaderField: "accept")
         let (data, _) = try await URLSession.shared.data(for: request)
         guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
@@ -29,6 +30,7 @@ enum Recon {
     static func rdap(_ domain: String) async throws -> String {
         guard let url = URL(string: "https://rdap.org/domain/\(domain)") else { return "bad domain" }
         var request = URLRequest(url: url)
+        request.timeoutInterval = 15
         request.setValue("application/rdap+json", forHTTPHeaderField: "accept")
         let (data, _) = try await URLSession.shared.data(for: request)
         guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {

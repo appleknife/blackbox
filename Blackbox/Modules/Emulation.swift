@@ -49,7 +49,7 @@ final class CardEmulator: ObservableObject {
                         await session.stopEmulation(status: .success)
                     case .received(let apdu):
                         let hex = apdu.payload.map { String(format: "%02X", $0) }.joined(separator: " ")
-                        self.traffic.append("← \(hex)")
+                        self.traffic.append("-> \(hex)")
                         if self.traffic.count > 40 { self.traffic.removeFirst() }
                         CaseLog.shared.record("RAD-02", "Emulated APDU \(hex)")
                         try? await apdu.respond(response: Data([0x90, 0x00]))
@@ -89,7 +89,7 @@ struct EmulationPanel: View {
                     Spacer()
                     StatusPill(text: emulator.status, tint: Palette.amber)
                 }
-                Text("The phone becomes the badge. Every APDU is logged and answered 90 00. AIDs: Visa, Mastercard, NDEF, test RID.")
+                Text("The phone becomes the badge. Every APDU is logged and answered 90 00. AIDs: Visa, Mastercard, NDEF, test RID. HCE is an Apple-managed entitlement; without it the session can end the app.")
                     .font(.mono(10))
                     .foregroundStyle(Palette.dim)
                 HStack(spacing: 10) {

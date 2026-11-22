@@ -46,7 +46,7 @@ final class PcapWriter {
             let stamp = UInt32(date.timeIntervalSince1970)
             var record = Data()
             record.appendLE(stamp.littleEndian)
-            record.appendLE(UInt32((date.timeIntervalSince1970 - Double(stamp)) * 1_000_000).littleEndian)
+            record.appendLE(min(999_999, UInt32((date.timeIntervalSince1970 - Double(stamp)) * 1_000_000)).littleEndian)
             record.appendLE(UInt32(packet.count).littleEndian)
             record.appendLE(UInt32(packet.count).littleEndian)
             record.append(packet)

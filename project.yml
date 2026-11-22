@@ -51,6 +51,8 @@ targets:
         INFOPLIST_FILE: BlackboxTunnel/Info.plist
         CODE_SIGN_ENTITLEMENTS: Entitlements/BlackboxTunnel.entitlements
         SKIP_INSTALL: YES
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: 0.1.0
 
 schemes:
   Blackbox:

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#07090a">
-<title>Blackbox — UI preview</title>
+<title>Blackbox - UI preview</title>
 <style>
   :root {
     --void: #07090a;
@@ -188,7 +188,7 @@
 <body>
 <div class="frame">
   <div class="chrome" id="chrome"></div>
-  <div class="status"><span id="clock">00:00</span><span><b>BLACKBOX</b> · 5G · 82%</span></div>
+  <div class="status"><span id="clock">00:00</span><span><b>BLACKBOX</b> &middot; 5G &middot; 82%</span></div>
   <div class="toast" id="toast">module armed</div>
 
   <div class="scroll" id="screen-deck">
@@ -236,7 +236,7 @@
         </button>
         <button class="card" data-mod="NFC bench" data-key="RAD-02">
           <div class="row"><svg class="glyph" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10h8M8 14h5"/></svg><span class="code">RAD-02</span></div>
-          <h3>NFC bench</h3><p>Dump NDEF, ISO 7816 and 15693 tags.</p>
+          <h3>NFC bench</h3><p>Dump NDEF and poke ISO 7816 badges.</p>
         </button>
       </div>
     </div>
@@ -284,12 +284,12 @@
     <div class="kicker" style="padding-top:14px">SCOPE</div>
     <h1 style="font-size:24px;margin-bottom:14px">Scope</h1>
     <div class="panel"><h3>An iPhone is a radio with a camera, not a laptop with an antenna.</h3><p>Blackbox sticks to what the sandbox permits and labels the rest instead of pretending.</p></div>
-    <div class="no"><i>⊘</i><div><b>No monitor mode</b><span>Wi-Fi is promiscuous-blind. Sweeps connect normally and infer.</span></div></div>
-    <div class="no"><i>⊘</i><div><b>No raw sockets</b><span>Sockets open per connection, so no half-open SYN scan.</span></div></div>
-    <div class="no"><i>⊘</i><div><b>Tunnel shows a pill</b><span>iOS paints a VPN badge while the tap runs.</span></div></div>
-    <div class="no"><i>⊘</i><div><b>Foreground only</b><span>Sensors and radios sleep when the app leaves the screen.</span></div></div>
-    <div class="no"><i>⊘</i><div><b>No card cloning</b><span>Only ISO 7816 emulation; payment cards stay opaque.</span></div></div>
-    <div class="no"><i>⊘</i><div><b>Hotspot Helper is a permit</b><span>Listing nearby SSIDs needs an entitlement Apple can refuse.</span></div></div>
+    <div class="no"><i>Ã¢Å Ëœ</i><div><b>No monitor mode</b><span>Wi-Fi is promiscuous-blind. Sweeps connect normally and infer.</span></div></div>
+    <div class="no"><i>Ã¢Å Ëœ</i><div><b>No raw sockets</b><span>Sockets open per connection, so no half-open SYN scan.</span></div></div>
+    <div class="no"><i>Ã¢Å Ëœ</i><div><b>Tunnel shows a pill</b><span>iOS paints a VPN badge while the tap runs.</span></div></div>
+    <div class="no"><i>Ã¢Å Ëœ</i><div><b>Foreground only</b><span>Sensors and radios sleep when the app leaves the screen.</span></div></div>
+    <div class="no"><i>Ã¢Å Ëœ</i><div><b>No card cloning</b><span>Only ISO 7816 emulation; payment cards stay opaque.</span></div></div>
+    <div class="no"><i>Ã¢Å Ëœ</i><div><b>Hotspot Helper is a permit</b><span>Listing nearby SSIDs needs an entitlement Apple can refuse.</span></div></div>
     <div class="panel" style="border-color:#6b542c"><h3 style="color:var(--amber);font-size:9px;letter-spacing:.18em">RULES</h3><p>Poke your own gear. Port scans are read-only; nothing writes to a host.</p></div>
   </div>
 
@@ -309,6 +309,7 @@
   tick(); setInterval(tick, 20000);
 
   const state = { entries: [], findings: 0, hosts: new Set(), busy: false };
+  const sweepRun = { timer: null };
   const $ = (id) => document.getElementById(id);
   const screens = { deck: $('screen-deck'), case: $('screen-case'), scope: $('screen-scope') };
 
@@ -340,7 +341,7 @@
   }
 
   const pool = [
-    ['192.168.1.1', 80, 'HTTP', 'HTTP/1.1 200 OK · nginx'],
+    ['192.168.1.1', 80, 'HTTP', 'HTTP/1.1 200 OK &middot; nginx'],
     ['192.168.1.1', 443, 'HTTPS', ''],
     ['192.168.1.14', 62078, 'LOCKDOWN', ''],
     ['192.168.1.23', 9100, 'PRINTER', ''],
@@ -369,21 +370,26 @@
         log(`${svc.toLowerCase()} open on ${host}:${port}`, 'NET-01', 'finding');
       }
       if (pct >= 100) {
-        clearInterval(timer); state.busy = false; card.classList.remove('on');
-        toast('sweep complete · ' + emitted + ' open');
+        clearInterval(timer); sweepRun.timer = null; state.busy = false; card.classList.remove('on');
+        toast('sweep complete - ' + emitted + ' open');
         log('Sweep finished with ' + emitted + ' hits', 'NET-01');
       }
     }, 130);
+    sweepRun.timer = timer;
   }
 
   document.querySelectorAll('.card').forEach(card => card.addEventListener('click', () => {
     const key = card.dataset.key, name = card.dataset.mod;
     if (key === 'NET-01') return sweep(card);
-    toast(name + ' · armed');
+    toast(name + ' - armed');
     log(name + ' opened. Native module, preview stub.', key);
   }));
 
   $('wipe').addEventListener('click', () => {
+    if (sweepRun.timer) { clearInterval(sweepRun.timer); sweepRun.timer = null; }
+    state.busy = false;
+    document.querySelectorAll('.card.on').forEach(c => c.classList.remove('on'));
+    $('bar').firstElementChild.style.width = '0%';
     state.entries = []; state.findings = 0; state.hosts.clear();
     $('findings').textContent = '0 findings'; $('hosts').textContent = '0 hosts'; $('count').textContent = '0 entries';
     $('hits').innerHTML = ''; $('bar').classList.add('hidden');

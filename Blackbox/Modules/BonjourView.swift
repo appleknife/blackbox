@@ -47,14 +47,13 @@ struct BonjourView: View {
                                 .font(.mono(9, weight: .bold))
                                 .tracking(1.1)
                                 .foregroundStyle(Palette.amber)
-                            if let host = item.host {
-                                Text(host).font(.mono(10)).foregroundStyle(Palette.dim)
-                            }
+
                         }
                         Spacer()
                     }
                 }
             }
         }
+        .onDisappear { browser.stop() }
     }
 }

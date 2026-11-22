@@ -54,7 +54,7 @@ enum ModuleID: String, CaseIterable, Identifiable {
         case .bonjour: return "Listen to devices announcing themselves."
         case .wifi: return "SSID, BSSID, signal, local address."
         case .bleed: return "Enumerate GATT, read, write, notify."
-        case .nfc: return "Dump NDEF, ISO 7816 and 15693 tags."
+        case .nfc: return "Dump NDEF and poke ISO 7816 badges."
         case .capture: return "Route traffic through a pcap tunnel."
         case .encode: return "Base64, hex, JWT, XOR, rot13."
         case .hash: return "Identify digests and run short wordlists."

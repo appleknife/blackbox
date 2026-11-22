@@ -42,7 +42,7 @@ struct BLEView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         LabelCaps(text: "gatt table", tint: Palette.amber)
                         if explorer.fields.isEmpty {
-                            Text("Reading services…")
+                            Text("Reading services...")
                                 .font(.mono(10))
                                 .foregroundStyle(Palette.dim)
                         }
@@ -131,6 +131,10 @@ struct BLEView: View {
             Text("Scanning needs the app in front. Values show as hex. Unnamed entries are still worth a look; trackers hide their names.")
                 .font(.mono(10))
                 .foregroundStyle(Palette.dim)
+        }
+        .onDisappear {
+            explorer.stop()
+            explorer.disconnect()
         }
     }
 }

@@ -26,6 +26,7 @@ final class BLEExplorer: NSObject, ObservableObject {
     private var central: CBCentralManager?
     private var peripherals: [UUID: CBPeripheral] = [:]
     private var listeners: [CBUUID: CBCharacteristic] = [:]
+    private var active: CBPeripheral?
 
     func begin() {
         guard central == nil else {
@@ -42,15 +43,22 @@ final class BLEExplorer: NSObject, ObservableObject {
 
     func connect(_ device: BLEDevice) {
         guard let peripheral = peripherals[device.id] else { return }
+        central?.stopScan()
+        peripheral.delegate = self
         fields = []
         output = ""
+        message = nil
+        active = peripheral
         state = "linking \(device.name)"
         central?.connect(peripheral)
     }
 
     func disconnect() {
-        guard let name = connected, let peripheral = peripherals.values.first(where: { $0.name == name }) else { return }
-        central?.cancelPeripheralConnection(peripheral)
+        if let peripheral = active {
+            central?.cancelPeripheralConnection(peripheral)
+        }
+        active = nil
+        listeners = [:]
         fields = []
         connected = nil
         state = "idle"
@@ -76,9 +84,7 @@ final class BLEExplorer: NSObject, ObservableObject {
     }
 
     private func locate(_ field: BLEField) -> (CBPeripheral, CBCharacteristic)? {
-        guard let peripheral = peripherals.values.first(where: { $0.services?.contains(where: { service in
-            service.characteristics?.contains(where: { $0.uuid.uuidString == field.uuid }) ?? false
-        }) ?? false }), let characteristic = listeners[CBUUID(string: field.uuid)] else {
+        guard let peripheral = active, let characteristic = listeners[CBUUID(string: field.uuid)] else {
             message = "Characteristic no longer reachable."
             return nil
         }
@@ -127,6 +133,7 @@ extension BLEExplorer: CBCentralManagerDelegate, CBPeripheralDelegate {
 
     nonisolated func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         Task { @MainActor in
+            self.active = peripheral
             self.connected = peripheral.name ?? "device"
             self.state = "connected"
             CaseLog.shared.record("RAD-01", "Linked to \(peripheral.name ?? "device")")
@@ -143,9 +150,11 @@ extension BLEExplorer: CBCentralManagerDelegate, CBPeripheralDelegate {
 
     nonisolated func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         Task { @MainActor in
+            self.active = nil
             self.connected = nil
             self.state = "idle"
             self.fields = []
+            self.listeners = [:]
         }
     }
 
@@ -177,7 +186,7 @@ extension BLEExplorer: CBCentralManagerDelegate, CBPeripheralDelegate {
         guard let data = characteristic.value else { return }
         let hex = data.map { String(format: "%02x", $0) }.joined()
         let ascii = String(data: data, encoding: .utf8)
-        let line = "\(characteristic.uuid.uuidString.prefix(8)) ← \(hex)\(ascii.map { "  \"\($0)\"" } ?? "")"
+        let line = "\(characteristic.uuid.uuidString.prefix(8)) -> \(hex)\(ascii.map { "  \"\($0)\"" } ?? "")"
         Task { @MainActor in
             self.output = line
             CaseLog.shared.record("RAD-01", line)

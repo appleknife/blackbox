@@ -84,8 +84,18 @@ final class CaseLog: ObservableObject {
 
     func clear() {
         entries.removeAll()
+        try? handle?.close()
         handle = nil
+        purgeFiles()
         caseNumber = Self.makeCaseNumber()
+    }
+
+    private func purgeFiles() {
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let files = (try? FileManager.default.contentsOfDirectory(at: documents, includingPropertiesForKeys: nil)) ?? []
+        for url in files where url.lastPathComponent.hasPrefix("case-") && url.pathExtension == "jsonl" {
+            try? FileManager.default.removeItem(at: url)
+        }
     }
 
     func exportJSON() -> Data {

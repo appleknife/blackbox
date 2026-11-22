@@ -57,7 +57,7 @@ enum Transforms {
             let signature = String(parts[2])
             report += signature.isEmpty
                 ? "SIGNATURE (none)"
-                : "SIGNATURE \(signature.count) b64url chars â€” verify separately"
+                : "SIGNATURE \(signature.count) b64url chars - verify separately"
         }
         return report.isEmpty ? nil : report.trimmingCharacters(in: .whitespacesAndNewlines)
     }
@@ -130,7 +130,7 @@ struct EncodeView: View {
                         }
                         .buttonStyle(DeckButtonStyle())
                     }
-                    Text(output.isEmpty ? "â€”" : output)
+                    Text(output.isEmpty ? "-" : output)
                         .font(.mono(12))
                         .foregroundStyle(output.isEmpty ? Palette.dim : Palette.paper)
                         .textSelection(.enabled)

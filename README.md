@@ -72,10 +72,10 @@ CI does the same on every push (`.github/workflows/build.yml`).
 
 The target requests:
 
-- Network Extension, `packet-tunnel-provider` â€” the packet tap
-- Wi-Fi information â€” SSID/BSSID reads
-- NFC tag reading and HCE â€” the tag bench and emulation
-- App Group `group.com.appleknife.blackbox` â€” shared capture folder
+- Network Extension, `packet-tunnel-provider` - the packet tap
+- Wi-Fi information - SSID/BSSID reads
+- NFC tag reading and HCE - the tag bench and emulation
+- App Group `group.com.appleknife.blackbox` - shared capture folder
 
 A free Apple account cannot provision Network Extension or App Groups at all.
 Use a paid team, or strip `Blackbox.entitlements` and `BlackboxTunnel` down to

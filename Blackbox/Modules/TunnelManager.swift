@@ -35,28 +35,37 @@ final class TunnelManager: ObservableObject {
     }
 
     func prepare() async {
+        if let manager {
+            status = manager.connection.status
+            refreshFiles()
+            return
+        }
         do {
             let managers = try await NETunnelProviderManager.loadAllFromPreferences()
-            let manager = managers.first { ($0.protocolConfiguration as? NETunnelProviderProtocol)?.providerBundleIdentifier == "com.appleknife.blackbox.tunnel" }
+            let manager = managers.first(where: { ($0.protocolConfiguration as? NETunnelProviderProtocol)?.providerBundleIdentifier == "com.appleknife.blackbox.tunnel" })
                 ?? NETunnelProviderManager()
 
-            let proto = NETunnelProviderProtocol()
-            proto.providerBundleIdentifier = "com.appleknife.blackbox.tunnel"
-            proto.serverAddress = "10.7.0.1"
-            manager.protocolConfiguration = proto
-            manager.localizedDescription = "Blackbox tap"
-            manager.isEnabled = true
-            try await manager.saveToPreferences()
-            try await manager.loadFromPreferences()
+            if manager.protocolConfiguration == nil {
+                let proto = NETunnelProviderProtocol()
+                proto.providerBundleIdentifier = "com.appleknife.blackbox.tunnel"
+                proto.serverAddress = "10.7.0.1"
+                manager.protocolConfiguration = proto
+                manager.localizedDescription = "Blackbox tap"
+                manager.isEnabled = true
+                try await manager.saveToPreferences()
+                try await manager.loadFromPreferences()
+            }
             self.manager = manager
             status = manager.connection.status
 
-            observer = NotificationCenter.default.addObserver(
-                forName: .NEVPNStatusDidChange, object: manager.connection, queue: .main
-            ) { [weak self] _ in
-                Task { @MainActor in
-                    self?.status = manager.connection.status
-                    self?.refreshFiles()
+            if observer == nil {
+                observer = NotificationCenter.default.addObserver(
+                    forName: .NEVPNStatusDidChange, object: manager.connection, queue: .main
+                ) { [weak self] _ in
+                    Task { @MainActor in
+                        self?.status = manager.connection.status
+                        self?.refreshFiles()
+                    }
                 }
             }
         } catch {
@@ -67,7 +76,10 @@ final class TunnelManager: ObservableObject {
 
     func toggle() {
         guard let manager else {
-            Task { await prepare() }
+            Task {
+                await prepare()
+                toggle()
+            }
             return
         }
         do {
@@ -81,6 +93,13 @@ final class TunnelManager: ObservableObject {
             message = error.localizedDescription
             Haptics.miss()
         }
+    }
+
+    deinit {
+        if let observer {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        timer?.invalidate()
     }
 
     func refreshFiles() {

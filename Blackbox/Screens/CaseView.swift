@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CaseView: View {
     @EnvironmentObject private var log: CaseLog
+    @State private var confirmingWipe = false
 
     var body: some View {
         ZStack {
@@ -32,7 +33,7 @@ struct CaseView: View {
                 }
             }
         }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     private var header: some View {
@@ -49,10 +50,19 @@ struct CaseView: View {
             HStack(spacing: 8) {
                 CaseExportButton(log: log)
                 Button("Wipe") {
-                    Haptics.miss()
-                    log.clear()
+                    Haptics.tap()
+                    confirmingWipe = true
                 }
                 .buttonStyle(DeckButtonStyle(tint: Palette.blood))
+                .confirmationDialog("Wipe this case?", isPresented: $confirmingWipe, titleVisibility: .visible) {
+                    Button("Delete \(log.entries.count) entries and their files", role: .destructive) {
+                        Haptics.miss()
+                        log.clear()
+                    }
+                    Button("Keep", role: .cancel) {}
+                } message: {
+                    Text("Captures stay put. Case JSONL files in Documents are removed.")
+                }
             }
         }
         .padding(16)

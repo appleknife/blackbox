@@ -74,7 +74,7 @@ final class HostSweeper: ObservableObject {
         }
 
         isRunning = false
-        message = hits.isEmpty ? "Nothing answered. Quiet network." : "\(hits.count) open services."
+        message = stopped ? "Aborted after \(hits.count) hits." : (hits.isEmpty ? "Nothing answered. Quiet network." : "\(hits.count) open services.")
         CaseLog.shared.record("NET-01", "Sweep finished with \(hits.count) hits")
     }
 
@@ -156,12 +156,13 @@ final class HostSweeper: ObservableObject {
 
         for cursor in sequence(first: first, next: { $0.pointee.ifa_next }) {
             let interface = cursor.pointee
-            guard interface.ifa_addr.pointee.sa_family == UInt8(AF_INET) else { continue }
+            guard let raw = interface.ifa_addr else { continue }
+            guard raw.pointee.sa_family == UInt8(AF_INET) else { continue }
             let name = String(cString: interface.ifa_name)
-            guard name == "en0" else { continue }
-            var address = interface.ifa_addr.pointee
+            guard name.hasPrefix("en") else { continue }
+            var address = raw.pointee
             var text = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-            guard getnameinfo(&address, socklen_t(interface.ifa_addr.pointee.sa_len),
+            guard getnameinfo(&address, socklen_t(raw.pointee.sa_len),
                               &text, socklen_t(text.count), nil, 0, NI_NUMERICHOST) == 0 else { continue }
             let value = String(cString: text)
             if !value.hasPrefix("169.254.") { return value }

@@ -83,5 +83,6 @@ struct SweepView: View {
                 }
             }
         }
+        .onDisappear { sweeper.stop() }
     }
 }
