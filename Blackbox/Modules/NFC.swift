@@ -41,7 +41,10 @@ final class NFCBench: NSObject, ObservableObject {
         }
         status = "polling"
         tagInfo = []
-        let session = NFCTagReaderSession(pollingOption: [.iso14443, .iso15693], delegate: self, queue: nil)
+        guard let session = NFCTagReaderSession(pollingOption: [.iso14443, .iso15693], delegate: self, queue: nil) else {
+            message = "Could not open a tag session."
+            return
+        }
         session.alertMessage = "Tap a badge or transit chip."
         session.begin()
         tagSession = session
@@ -67,7 +70,7 @@ final class NFCBench: NSObject, ObservableObject {
                 let hex = (data + Data([sw1, sw2])).map { String(format: "%02X", $0) }.joined(separator: " ")
                 self.response = hex
                 self.status = String(format: "SW %02X%02X", sw1, sw2)
-                CaseLog.shared.finding("RAD-02", "APDU \(self.apdu) → \(hex)")
+                CaseLog.shared.finding("RAD-02", "APDU \(self.apdu) â†’ \(hex)")
             }
         }
     }
@@ -84,7 +87,7 @@ final class NFCBench: NSObject, ObservableObject {
             index = next
         }
         let body = bytes.count > 4 ? Data(bytes[4...]) : Data()
-        return NFCISO7816APDU(instructionClass: bytes[0], instruction: bytes[1],
+        return NFCISO7816APDU(instructionClass: bytes[0], instructionCode: bytes[1],
                               p1Parameter: bytes[2], p2Parameter: bytes[3],
                               data: body, expectedResponseLength: body.isEmpty ? 0 : 256)
     }
@@ -150,7 +153,7 @@ extension NFCBench: NFCTagReaderSessionDelegate {
                 if let historical = iso.historicalBytes {
                     info["historical"] = historical.map { String(format: "%02X", $0) }.joined()
                 }
-                if let aid = iso.initialSelectedAID { info["aid"] = aid }
+                if !iso.initialSelectedAID.isEmpty { info["aid"] = iso.initialSelectedAID }
                 self.tagInfo = info.map { "\($0.key.uppercased()) \($0.value)" }
                 self.status = "tag connected"
                 SessionStore.shared.keep(session)

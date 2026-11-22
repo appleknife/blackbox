@@ -53,7 +53,7 @@ enum Recon {
 
     static func certificates(_ domain: String) async throws -> String {
         guard let url = URL(string: "https://crt.sh/?q=%25.\(domain)&output=json") else { return "bad domain" }
-        let (data, _) = try await URLSession.shared.data(for: url)
+        let (data, _) = try await URLSession.shared.data(from: url)
         guard let rows = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
             return String(data: data, encoding: .utf8)?.prefix(400).description ?? "unreadable"
         }

@@ -27,7 +27,7 @@ final class HostSweeper: ObservableObject {
     @Published var message: String?
 
     private var stopped = false
-    private let queue = DispatchQueue(label: "com.appleknife.blackbox.sweep", qos: .userInitiated)
+    private static let queue = DispatchQueue(label: "com.appleknife.blackbox.sweep", qos: .userInitiated)
 
     func start() async {
         guard !isRunning else { return }
@@ -88,7 +88,7 @@ final class HostSweeper: ObservableObject {
         let box = Box()
         let connection = NWConnection(host: NWEndpoint.Host(host), port: nwPort, using: .tcp)
         connection.stateUpdateHandler = { state in box.state = state }
-        connection.start(queue: queue)
+        connection.start(queue: Self.queue)
 
         func wait(_ seconds: Double) async { try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000)) }
 
