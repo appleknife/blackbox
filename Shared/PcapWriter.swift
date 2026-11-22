@@ -67,6 +67,7 @@ final class PcapWriter {
 extension Data {
     mutating func appendLE<T: FixedWidthInteger>(_ value: T) {
         var raw = value.littleEndian
-        withUnsafeBytes(of: &raw) { append(contentsOf: $0) }
+        Swift.withUnsafeBytes(of: &raw) { append(contentsOf: $0) }
     }
 }
+
