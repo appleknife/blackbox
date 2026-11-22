@@ -1,5 +1,7 @@
 # Blackbox
 
+![build](https://github.com/appleknife/blackbox/actions/workflows/build.yml/badge.svg)
+
 **UI preview, right now on your phone: <https://appleknife.github.io/blackbox/>**
 
 An iPhone field deck for networks, radios and paperwork. Hold the phone like a
@@ -70,10 +72,10 @@ CI does the same on every push (`.github/workflows/build.yml`).
 
 The target requests:
 
-- Network Extension, `packet-tunnel-provider` — the packet tap
-- Wi-Fi information — SSID/BSSID reads
-- NFC tag reading and HCE — the tag bench and emulation
-- App Group `group.com.appleknife.blackbox` — shared capture folder
+- Network Extension, `packet-tunnel-provider` â€” the packet tap
+- Wi-Fi information â€” SSID/BSSID reads
+- NFC tag reading and HCE â€” the tag bench and emulation
+- App Group `group.com.appleknife.blackbox` â€” shared capture folder
 
 A free Apple account cannot provision Network Extension or App Groups at all.
 Use a paid team, or strip `Blackbox.entitlements` and `BlackboxTunnel` down to
@@ -98,7 +100,7 @@ docs/                architecture and roadmap
 
 ## Rules
 
-Poke your own gear. A hotel portal, a café printer and the neighbour's smart
+Poke your own gear. A hotel portal, a cafÃ© printer and the neighbour's smart
 bulb are fair game. Port sweeps are read-only; nothing here writes to a host.
 
 ## License
