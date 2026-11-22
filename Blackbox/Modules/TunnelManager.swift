@@ -109,7 +109,7 @@ final class TunnelManager: ObservableObject {
         }
         let folder = container.appendingPathComponent("captures")
         let urls = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.fileSizeKey, .contentModificationDateKey])) ?? []
-        files = urls.compactMap { url in
+        files = urls.filter { $0.pathExtension == "pcap" }.compactMap { url in
             let values = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
             return CaptureFile(url: url, size: values?.fileSize ?? 0, date: values?.contentModificationDate ?? Date())
         }

@@ -97,6 +97,7 @@ extension NFCBench: NFCNDEFReaderSessionDelegate {
     nonisolated func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
         Task { @MainActor in
             self.status = "idle"
+            self.ndefSession = nil
             if let nfcError = error as? NFCReaderError, nfcError.code != .readerSessionInvalidationErrorFirstNDEFTagRead {
                 self.message = nfcError.localizedDescription
             }
@@ -126,6 +127,8 @@ extension NFCBench: NFCTagReaderSessionDelegate {
     nonisolated func tagReaderSession(_ session: NFCTagReaderSession, didInvalidateWithError error: Error) {
         Task { @MainActor in
             self.status = "idle"
+            self.tagSession = nil
+            self.isoTag = nil
             if let nfcError = error as? NFCReaderError,
                nfcError.code != .readerSessionInvalidationErrorUserCanceled {
                 self.message = nfcError.localizedDescription
@@ -156,7 +159,6 @@ extension NFCBench: NFCTagReaderSessionDelegate {
                 if !iso.initialSelectedAID.isEmpty { info["aid"] = iso.initialSelectedAID }
                 self.tagInfo = info.map { "\($0.key.uppercased()) \($0.value)" }
                 self.status = "tag connected"
-                SessionStore.shared.keep(session)
                 Haptics.hit()
                 CaseLog.shared.finding("RAD-02", "ISO 7816 tag", fields: info)
             }
@@ -164,11 +166,3 @@ extension NFCBench: NFCTagReaderSessionDelegate {
     }
 }
 
-private final class SessionStore {
-    static let shared = SessionStore()
-    private var sessions: [AnyObject] = []
-
-    func keep(_ session: AnyObject) {
-        sessions.append(session)
-    }
-}

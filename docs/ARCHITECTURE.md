@@ -11,7 +11,7 @@ pcap writer and IP parser so both targets agree on the capture format.
 ## Threading
 
 - UI and `CaseLog` are `@MainActor`.
-- `HostSweeper` fans out `NWConnection` probes in task groups of 24 hosts; each
+- `HostSweeper` fans out `NWConnection` probes in task groups of 6 hosts; each
   probe is a 50 ms poll loop capped at ~0.6 s, with one 512-byte receive for
   banners. A lock box bridges the connection callbacks.
 - `BLEExplorer` and `NFCBench` are main-actor objects; CoreBluetooth and CoreNFC
@@ -25,10 +25,12 @@ pcap writer and IP parser so both targets agree on the capture format.
 2. `readPackets` hands raw IPv4 to `TunnelRelay`.
 3. Every packet is appended to a pcap with `LINKTYPE_RAW`.
 4. TCP: SYN opens an outbound connection, sequence and ack numbers are tracked,
-   payload is spliced with window-friendly 1200-byte chunks. FIN or timeout
+   payload is spliced with window-friendly 1200-byte chunks. RST, FIN or timeout
    tears the flow down.
-5. UDP: one outbound socket per five-tuple, replies injected back.
-6. Non-IP traffic is captured and dropped.
+5. UDP: one outbound socket per five-tuple, replies injected back, idle sockets
+   reaped after a minute.
+6. Local and multicast ranges bypass the tunnel; other non-IP traffic is
+   captured and dropped.
 
 The relay is the least proven part of the codebase. It is a v0 splice, not a
 stateful TCP stack: retransmits, SACK and odd window scaling are not modelled.

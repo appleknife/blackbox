@@ -50,7 +50,7 @@ final class HostSweeper: ObservableObject {
 
         var done = 0
         let total = hosts.count
-        for chunk in hosts.chunked(into: 24) {
+        for chunk in hosts.chunked(into: 6) {
             if stopped { break }
             await withTaskGroup(of: SweepHit?.self) { group in
                 for host in chunk {

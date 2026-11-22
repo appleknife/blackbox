@@ -46,6 +46,10 @@ final class CaseLog: ObservableObject {
         return formatter.string(from: Date())
     }
 
+    deinit {
+        try? handle?.close()
+    }
+
     func record(_ module: String, kind: CaseEntry.Kind = .observation,
                 _ message: String, fields: [String: String] = [:]) {
         let entry = CaseEntry(module: module, kind: kind, message: message, fields: fields)

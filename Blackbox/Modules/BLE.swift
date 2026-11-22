@@ -182,6 +182,15 @@ extension BLEExplorer: CBCentralManagerDelegate, CBPeripheralDelegate {
         }
     }
 
+    nonisolated func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+        Task { @MainActor in
+            if let error {
+                self.message = error.localizedDescription
+                return
+            }
+            self.output = "\(characteristic.uuid.uuidString.prefix(8)) notify \(characteristic.isNotifying ? "on" : "off")"
+        }
+    }
     nonisolated func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         guard let data = characteristic.value else { return }
         let hex = data.map { String(format: "%02x", $0) }.joined()

@@ -20,13 +20,13 @@ enum HashTool {
         let hex = trimmed.allSatisfy { $0.isHexDigit }
         guard hex else { return "not a hex digest" }
         switch trimmed.count {
-        case 32: return "32 hex — MD5 or NTLM"
-        case 40: return "40 hex — SHA-1"
-        case 56: return "56 hex — SHA-224"
-        case 64: return "64 hex — SHA-256"
-        case 96: return "96 hex — SHA-384"
-        case 128: return "128 hex — SHA-512"
-        default: return "\(trimmed.count) hex chars — unknown width"
+        case 32: return "32 hex - MD5 or NTLM"
+        case 40: return "40 hex - SHA-1"
+        case 56: return "56 hex - SHA-224"
+        case 64: return "64 hex - SHA-256"
+        case 96: return "96 hex - SHA-384"
+        case 128: return "128 hex - SHA-512"
+        default: return "\(trimmed.count) hex chars - unknown width"
         }
     }
 
@@ -40,14 +40,12 @@ enum HashTool {
         ]
     }
 
-    static func crack(_ target: String, progress: @escaping (Int) -> Void) -> String? {
+    static func crack(_ target: String) -> String? {
         let needle = target.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        for (index, word) in words.enumerated() {
+        for word in words {
             for (name, digest) in digests(word) where digest == needle {
-                progress(index)
                 return "\(word)  (\(name))"
             }
-            if index % 8 == 0 { progress(index) }
         }
         return nil
     }
@@ -132,18 +130,18 @@ struct HashView: View {
         Haptics.tap()
         busy = true
         cracked = nil
-        verdict = "Running 45 candidates…"
+        verdict = "Running 45 candidates..."
         let target = input
         Task {
             let found = await Task.detached(priority: .userInitiated) {
-                HashTool.crack(target) { _ in }
+                HashTool.crack(target)
             }.value
             cracked = found
             verdict = found == nil ? "No match in the built-in list." : "Match found."
             busy = false
             if found != nil {
                 Haptics.hit()
-                CaseLog.shared.finding("TRD-02", "Cracked \(found!)", fields: ["digest": target.prefix(16) + "…"])
+                CaseLog.shared.finding("TRD-02", "Cracked \(found!)", fields: ["digest": target.prefix(16) + "..."])
             } else {
                 Haptics.miss()
             }
