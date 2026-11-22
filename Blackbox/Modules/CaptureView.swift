@@ -23,7 +23,7 @@ struct CaptureView: View {
                     } label: {
                         Label(tunnel.isRunning ? "Stop tap" : "Start tap", systemImage: tunnel.isRunning ? "stop.fill" : "record.circle")
                     }
-                    .buttonStyle(DeckButtonStyle(filled: !tunnel.isRunning, tint: tunnel.isRunning ? Palette.blood : Palette.acid))
+                    .buttonStyle(DeckButtonStyle(tint: tunnel.isRunning ? Palette.blood : Palette.acid, filled: !tunnel.isRunning))
                     if let message = tunnel.message {
                         Text(message).font(.mono(10)).foregroundStyle(Palette.blood)
                     }
