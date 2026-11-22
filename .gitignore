@@ -1,0 +1,15 @@
+.DS_Store
+build/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+!*.xcodeproj/project.pbxproj
+xcuserdata/
+*.xcuserstate
+.swiftpm/
+Pods/
+*.ipa
+*.dSYM.zip
+*.dSYM
+.github/local
+preview/*.local.html

@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07090a">
+<title>Blackbox — UI preview</title>
+<style>
+  :root {
+    --void: #07090a;
+    --panel: #0c1110;
+    --edge: #1e2a25;
+    --acid: #7dff8a;
+    --amber: #ffc46b;
+    --blood: #ff6b6b;
+    --dim: #6e8178;
+    --paper: #d8e6de;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: #050706;
+    color: var(--paper);
+    font-family: var(--mono);
+    display: flex;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .frame {
+    position: relative;
+    width: 100%;
+    max-width: 430px;
+    height: 100dvh;
+    max-height: 932px;
+    background: var(--void) radial-gradient(circle at 50% 0%, #0d1713, transparent 65%);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #131c18;
+  }
+  @media (min-width: 480px) {
+    body { align-items: center; padding: 24px; }
+    .frame { border-radius: 34px; height: min(880px, 92dvh); }
+  }
+  .chrome {
+    display: grid;
+    grid-template-columns: repeat(28, 1fr);
+    grid-auto-rows: 24px;
+    position: absolute;
+    inset: 0;
+    opacity: .5;
+    pointer-events: none;
+  }
+  .chrome i { border-right: 1px solid #101a15; border-bottom: 1px solid #101a15; }
+  .status {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 20px 6px;
+    font-size: 11px;
+    letter-spacing: .08em;
+    color: var(--dim);
+  }
+  .status b { color: var(--paper); font-weight: 600; }
+  .scroll {
+    position: relative;
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 16px 24px;
+    scrollbar-width: none;
+  }
+  .scroll::-webkit-scrollbar { display: none; }
+  .masthead { display: flex; justify-content: space-between; align-items: flex-start; padding-top: 10px; }
+  h1 {
+    margin: 0;
+    font-size: 30px;
+    letter-spacing: .1em;
+    font-weight: 800;
+    color: var(--paper);
+  }
+  .kicker { font-size: 9px; letter-spacing: .2em; color: var(--acid); text-transform: uppercase; }
+  .meta { font-size: 9px; letter-spacing: .16em; color: var(--dim); text-transform: uppercase; }
+  .rule { height: 1px; background: var(--edge); margin: 10px 0 0; }
+  .pills { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+  .pill {
+    font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--dim); border: 1px solid #26332c; border-radius: 999px;
+    padding: 4px 9px; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .pill.live { color: var(--acid); border-color: #2c6b3a; }
+  .pill.amber { color: var(--amber); border-color: #6b542c; }
+  .pill i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .lede { font-size: 11px; line-height: 1.55; color: var(--dim); margin: 0 0 18px; }
+  .group { margin-bottom: 18px; }
+  .group h2 {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 9px; font-weight: 700; letter-spacing: .2em;
+    color: var(--amber); text-transform: uppercase; margin: 0 0 8px;
+  }
+  .group h2::after { content: ""; flex: 1; height: 1px; background: var(--edge); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card {
+    text-align: left;
+    font-family: inherit;
+    color: inherit;
+    cursor: pointer;
+    background: linear-gradient(150deg, var(--panel), var(--void));
+    border: 1px solid var(--edge);
+    border-radius: 13px;
+    padding: 11px;
+    min-height: 98px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: border-color .15s, transform .1s;
+  }
+  .card:active { transform: scale(.975); border-color: var(--acid); }
+  .card .row { display: flex; justify-content: space-between; align-items: center; }
+  .glyph { width: 16px; height: 16px; stroke: var(--acid); fill: none; stroke-width: 1.7; }
+  .card .code { font-size: 8px; letter-spacing: .12em; color: var(--dim); }
+  .card h3 { font-size: 13px; margin: 0; letter-spacing: .02em; }
+  .card p { font-size: 9.5px; line-height: 1.5; color: var(--dim); margin: 0; }
+  .card.on { border-color: #2c6b3a; }
+  .bar { height: 4px; border-radius: 2px; background: #16211c; overflow: hidden; margin: 12px 0 8px; }
+  .bar span { display: block; height: 100%; width: 0; background: var(--acid); transition: width .25s linear; }
+  .hit {
+    border: 1px solid #244a2f;
+    border-radius: 11px;
+    padding: 10px;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+    background: #0a1210;
+    animation: pop .2s ease-out;
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(5px); } }
+  .hit b { color: var(--acid); font-size: 15px; width: 44px; }
+  .hit .who { font-size: 12px; }
+  .hit .svc { font-size: 8px; letter-spacing: .14em; color: var(--amber); }
+  .hit .banner { font-size: 9px; color: var(--dim); }
+  .entries { display: flex; flex-direction: column; gap: 8px; }
+  .entry { border: 1px solid var(--edge); border-left: 2px solid var(--acid); border-radius: 9px; padding: 9px 10px; background: #0a100e; }
+  .entry .top { display: flex; gap: 8px; font-size: 8.5px; letter-spacing: .1em; color: var(--dim); text-transform: uppercase; }
+  .entry .top b { color: var(--acid); font-weight: 600; }
+  .entry .say { font-size: 11.5px; margin-top: 4px; }
+  .empty { text-align: center; color: var(--dim); font-size: 11px; line-height: 1.7; padding: 48px 0; }
+  .btn {
+    font-family: inherit; font-size: 11px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; padding: 10px 13px; border-radius: 9px;
+    border: 1px solid var(--acid); color: var(--acid); background: #7dff8a12;
+    cursor: pointer;
+  }
+  .btn:active { background: #7dff8a28; }
+  .btn.fill { background: var(--acid); color: var(--void); }
+  .btn.blood { border-color: var(--blood); color: var(--blood); background: #ff6b6b10; }
+  .panel { border: 1px solid var(--edge); border-radius: 12px; padding: 12px; background: #0a100e; margin-bottom: 12px; }
+  .panel p { margin: 0; font-size: 10.5px; line-height: 1.6; color: var(--dim); }
+  .panel h3 { margin: 0 0 6px; font-size: 12px; }
+  .no { display: flex; gap: 9px; margin-bottom: 10px; font-size: 10.5px; line-height: 1.55; }
+  .no i { color: var(--blood); font-style: normal; font-size: 11px; }
+  .no b { display: block; font-size: 11.5px; color: var(--paper); }
+  .no span { color: var(--dim); }
+  .toolbar {
+    display: flex; border-top: 1px solid var(--edge); background: #0a100e;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .toolbar button {
+    flex: 1; font-family: inherit; background: none; border: 0; color: var(--dim);
+    padding: 10px 0 12px; font-size: 8.5px; letter-spacing: .16em; text-transform: uppercase;
+    display: grid; justify-items: center; gap: 5px; cursor: pointer;
+  }
+  .toolbar button.on { color: var(--acid); }
+  .toolbar svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+  .toast {
+    position: absolute; left: 50%; bottom: 76px; transform: translate(-50%, 12px);
+    background: #0e1a14; border: 1px solid #2c6b3a; color: var(--acid);
+    font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+    padding: 8px 12px; border-radius: 8px; opacity: 0; pointer-events: none;
+    transition: opacity .2s, transform .2s; white-space: nowrap;
+  }
+  .toast.up { opacity: 1; transform: translate(-50%, 0); }
+  .hidden { display: none; }
+  .footnote { font-size: 9px; color: #44544b; line-height: 1.6; padding: 6px 0 14px; }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="chrome" id="chrome"></div>
+  <div class="status"><span id="clock">00:00</span><span><b>BLACKBOX</b> · 5G · 82%</span></div>
+  <div class="toast" id="toast">module armed</div>
+
+  <div class="scroll" id="screen-deck">
+    <div class="masthead">
+      <div>
+        <div class="kicker">field deck / case 261122-1934</div>
+        <h1>BLACKBOX</h1>
+      </div>
+      <svg class="glyph" style="width:26px;height:26px" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 16 0"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/><circle cx="12" cy="16" r="1.6"/></svg>
+    </div>
+    <div class="pills">
+      <span class="pill live"><i></i><span id="hosts">0 hosts</span></span>
+      <span class="pill amber"><i></i><span id="findings">0 findings</span></span>
+    </div>
+    <p class="lede">Hold the phone like a tool, not a screen. Every module writes into the case file.</p>
+
+    <div class="group">
+      <h2>The wire</h2>
+      <div class="grid">
+        <button class="card" data-mod="LAN sweep" data-key="NET-01">
+          <div class="row"><svg class="glyph" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.4"/><path d="M5 12a7 7 0 0 1 14 0M8 12a4 4 0 0 1 8 0"/></svg><span class="code">NET-01</span></div>
+          <h3>LAN sweep</h3><p>Knock ports across the subnet and keep what answers.</p>
+        </button>
+        <button class="card" data-mod="Announcements" data-key="NET-02">
+          <div class="row"><svg class="glyph" viewBox="0 0 24 24"><path d="M12 20V9"/><path d="M8 13a6 6 0 0 1 8 0"/><path d="M5 10a10 10 0 0 1 14 0"/></svg><span class="code">NET-02</span></div>
+          <h3>Announcements</h3><p>Listen to devices announcing themselves.</p>
+        </button>
+        <button class="card" data-mod="Wi-Fi readout" data-key="NET-03">
+          <div class="row"><svg class="glyph" viewBox="0 0 24 24"><path d="M3 9a15 15 0 0 1 18 0"/><path d="M6.5 12.5a10 10 0 0 1 11 0"/><path d="M9.5 16a5 5 0 0 1 5 0"/><circle cx="12" cy="19" r="1"/></svg><span class="code">NET-03</span></div>
+          <h3>Wi-Fi readout</h3><p>SSID, BSSID, signal, local address.</p>
+        </button>
+        <button class="card" data-mod="Packet tap" data-key="NET-04">
+          <div class="row"><svg class="glyph" viewBox="0 0 24 24"><path d="M12 3v10"/><path d="m8 9 4 4 4-4"/><rect x="4" y="16" width="16" height="5" rx="1.5"/></svg><span class="code">NET-04</span></div>
+          <h3>Packet tap</h3><p>Route traffic through a pcap tunnel.</p>
+        </button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Radios</h2>
+      <div class="grid">
+        <button class="card" data-mod="BLE explorer" data-key="RAD-01">
+          <div class="row"><svg class="glyph" viewBox="0 0 24 24"><path d="M8 4v16l8-5-8-6 8-5"/></svg><span class="code">RAD-01</span></div>
+          <h3>BLE explorer</h3><p>Enumerate GATT, read, write, notify.</p>
+        </button>
+        <button class="card" data-mod="NFC bench" data-key="RAD-02">
+          <div class="row"><svg class="glyph" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10h8M8 14h5"/></svg><span class="code">RAD-02</span></div>
+          <h3>NFC bench</h3><p>Dump NDEF, ISO 7816 and 15693 tags.</p>
+        </button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Tradecraft</h2>
+      <div class="grid">
+        <button class="card" data-mod="Encode deck" data-key="TRD-01">
+          <div class="row"><svg class="glyph" viewBox="0 0 24 24"><path d="m9 8-4 4 4 4M15 8l4 4-4 4"/></svg><span class="code">TRD-01</span></div>
+          <h3>Encode deck</h3><p>Base64, hex, JWT, XOR, rot13.</p>
+        </button>
+        <button class="card" data-mod="Hash bench" data-key="TRD-02">
+          <div class="row"><svg class="glyph" viewBox="0 0 24 24"><path d="M9 4 7 20M17 4l-2 16M4 9h16M3 15h16"/></svg><span class="code">TRD-02</span></div>
+          <h3>Hash bench</h3><p>Identify digests and run short wordlists.</p>
+        </button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Open source</h2>
+      <div class="grid">
+        <button class="card" data-mod="Open source" data-key="OSN-01">
+          <div class="row"><svg class="glyph" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 2.6 14.6 0 17-2.6-2.4-2.6-14.6 0-17Z"/></svg><span class="code">OSN-01</span></div>
+          <h3>Open source</h3><p>DNS, RDAP, certificate pulls.</p>
+        </button>
+      </div>
+    </div>
+
+    <div class="panel"><h3 style="color:var(--amber);font-size:9px;letter-spacing:.18em">RULES OF ENGAGEMENT</h3><p>Scan only networks and gadgets you own or have permission to poke. Nothing here attacks anything.</p></div>
+    <div class="bar hidden" id="bar"><span></span></div>
+    <div id="hits"></div>
+    <p class="footnote">Preview only. The shipped app is native and talks to real radios.</p>
+  </div>
+
+  <div class="scroll hidden" id="screen-case">
+    <div class="masthead" style="padding-top:10px">
+      <div><div class="kicker">case 261122-1934</div><h1 style="font-size:21px;letter-spacing:.06em">CASE FILE</h1></div>
+      <span class="meta" id="count">0 entries</span>
+    </div>
+    <div class="pills"><button class="btn" id="export">Export case</button><button class="btn blood" id="wipe">Wipe</button></div>
+    <div class="entries" id="entries"><div class="empty">Case file is empty.<br>Run a module.</div></div>
+  </div>
+
+  <div class="scroll hidden" id="screen-scope">
+    <div class="kicker" style="padding-top:14px">SCOPE</div>
+    <h1 style="font-size:24px;margin-bottom:14px">Scope</h1>
+    <div class="panel"><h3>An iPhone is a radio with a camera, not a laptop with an antenna.</h3><p>Blackbox sticks to what the sandbox permits and labels the rest instead of pretending.</p></div>
+    <div class="no"><i>⊘</i><div><b>No monitor mode</b><span>Wi-Fi is promiscuous-blind. Sweeps connect normally and infer.</span></div></div>
+    <div class="no"><i>⊘</i><div><b>No raw sockets</b><span>Sockets open per connection, so no half-open SYN scan.</span></div></div>
+    <div class="no"><i>⊘</i><div><b>Tunnel shows a pill</b><span>iOS paints a VPN badge while the tap runs.</span></div></div>
+    <div class="no"><i>⊘</i><div><b>Foreground only</b><span>Sensors and radios sleep when the app leaves the screen.</span></div></div>
+    <div class="no"><i>⊘</i><div><b>No card cloning</b><span>Only ISO 7816 emulation; payment cards stay opaque.</span></div></div>
+    <div class="no"><i>⊘</i><div><b>Hotspot Helper is a permit</b><span>Listing nearby SSIDs needs an entitlement Apple can refuse.</span></div></div>
+    <div class="panel" style="border-color:#6b542c"><h3 style="color:var(--amber);font-size:9px;letter-spacing:.18em">RULES</h3><p>Poke your own gear. Port scans are read-only; nothing writes to a host.</p></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="on" data-tab="deck"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1"/></svg>Deck</button>
+    <button data-tab="case"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M7.5 9h9M7.5 13h9M7.5 17h5"/></svg>Case</button>
+    <button data-tab="scope"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v6M12 7.6v.2"/></svg>Scope</button>
+  </div>
+</div>
+
+<script>
+  const chrome = document.getElementById('chrome');
+  for (let i = 0; i < 28 * 34; i++) chrome.appendChild(document.createElement('i'));
+
+  const clock = document.getElementById('clock');
+  const tick = () => { const d = new Date(); clock.textContent = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); };
+  tick(); setInterval(tick, 20000);
+
+  const state = { entries: [], findings: 0, hosts: new Set(), busy: false };
+  const $ = (id) => document.getElementById(id);
+  const screens = { deck: $('screen-deck'), case: $('screen-case'), scope: $('screen-scope') };
+
+  document.querySelectorAll('[data-tab]').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b === btn));
+    Object.entries(screens).forEach(([key, el]) => el.classList.toggle('hidden', key !== btn.dataset.tab));
+  }));
+
+  function stamp() { const d = new Date(); return d.toTimeString().slice(0,8); }
+
+  function log(say, key = 'SYS-00', kind = 'observation') {
+    state.entries.unshift({ t: stamp(), key, say, kind });
+    $('count').textContent = state.entries.length + ' entries';
+    if (kind === 'finding') { state.findings++; $('findings').textContent = state.findings + ' findings'; }
+    render();
+  }
+
+  function render() {
+    const box = $('entries');
+    if (!state.entries.length) { box.innerHTML = '<div class="empty">Case file is empty.<br>Run a module.</div>'; return; }
+    box.innerHTML = state.entries.slice(0, 60).map(e =>
+      `<div class="entry"><div class="top"><span>${e.t}</span><b>${e.key}</b><span style="margin-left:auto">${e.kind.toUpperCase()}</span></div><div class="say">${e.say}</div></div>`
+    ).join('');
+  }
+
+  function toast(text) {
+    const el = $('toast'); el.textContent = text; el.classList.add('up');
+    clearTimeout(el._h); el._h = setTimeout(() => el.classList.remove('up'), 1600);
+  }
+
+  const pool = [
+    ['192.168.1.1', 80, 'HTTP', 'HTTP/1.1 200 OK · nginx'],
+    ['192.168.1.1', 443, 'HTTPS', ''],
+    ['192.168.1.14', 62078, 'LOCKDOWN', ''],
+    ['192.168.1.23', 9100, 'PRINTER', ''],
+    ['192.168.1.31', 22, 'SSH', 'SSH-2.0-OpenSSH_9.6'],
+    ['192.168.1.40', 8008, 'CAST', 'HTTP/1.0 200 OK'],
+    ['192.168.1.47', 445, 'SMB', ''],
+    ['192.168.1.52', 5000, 'UPNP', 'HTTP/1.1 404']
+  ];
+
+  function sweep(card) {
+    if (state.busy) { toast('sweep already running'); return; }
+    state.busy = true; card.classList.add('on');
+    $('hits').innerHTML = ''; const bar = $('bar'); bar.classList.remove('hidden');
+    log('Sweeping 192.168.1.0/24 on 14 ports', 'NET-01');
+    let pct = 0, emitted = 0;
+    const timer = setInterval(() => {
+      pct = Math.min(100, pct + 4.5);
+      bar.firstElementChild.style.width = pct + '%';
+      if (pct > 22 && emitted < pool.length && Math.random() > .55) {
+        const [host, port, svc, banner] = pool[emitted++];
+        state.hosts.add(host); $('hosts').textContent = state.hosts.size + ' hosts';
+        const div = document.createElement('div');
+        div.className = 'hit';
+        div.innerHTML = `<b>${port}</b><div><div class="who">${host}</div><div class="svc">${svc}</div>${banner ? `<div class="banner">${banner}</div>` : ''}</div>`;
+        $('hits').appendChild(div);
+        log(`${svc.toLowerCase()} open on ${host}:${port}`, 'NET-01', 'finding');
+      }
+      if (pct >= 100) {
+        clearInterval(timer); state.busy = false; card.classList.remove('on');
+        toast('sweep complete · ' + emitted + ' open');
+        log('Sweep finished with ' + emitted + ' hits', 'NET-01');
+      }
+    }, 130);
+  }
+
+  document.querySelectorAll('.card').forEach(card => card.addEventListener('click', () => {
+    const key = card.dataset.key, name = card.dataset.mod;
+    if (key === 'NET-01') return sweep(card);
+    toast(name + ' · armed');
+    log(name + ' opened. Native module, preview stub.', key);
+  }));
+
+  $('wipe').addEventListener('click', () => {
+    state.entries = []; state.findings = 0; state.hosts.clear();
+    $('findings').textContent = '0 findings'; $('hosts').textContent = '0 hosts'; $('count').textContent = '0 entries';
+    $('hits').innerHTML = ''; $('bar').classList.add('hidden');
+    render(); toast('case wiped');
+  });
+
+  $('export').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(state.entries, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'case-preview.json'; a.click();
+    URL.revokeObjectURL(a.href); toast('case exported');
+  });
+
+  log('Case 261122-1934 opened', 'SYS-00');
+  render();
+</script>
+</body>
+</html>
