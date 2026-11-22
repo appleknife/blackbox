@@ -29,13 +29,13 @@ final class PcapWriter {
 
     private func writeHeader() throws {
         var header = Data()
-        header.append(UInt32(0xA1B2C3D4).littleEndian)
-        header.append(UInt16(2).littleEndian)
-        header.append(UInt16(4).littleEndian)
-        header.append(UInt32(0).littleEndian)
-        header.append(UInt32(0).littleEndian)
-        header.append(UInt32(65535).littleEndian)
-        header.append(Self.linkTypeRaw.littleEndian)
+        header.appendLE(UInt32(0xA1B2C3D4).littleEndian)
+        header.appendLE(UInt16(2).littleEndian)
+        header.appendLE(UInt16(4).littleEndian)
+        header.appendLE(UInt32(0).littleEndian)
+        header.appendLE(UInt32(0).littleEndian)
+        header.appendLE(UInt32(65535).littleEndian)
+        header.appendLE(Self.linkTypeRaw.littleEndian)
         try handle.write(contentsOf: header)
     }
 
@@ -45,10 +45,10 @@ final class PcapWriter {
             guard let self else { return }
             let stamp = UInt32(date.timeIntervalSince1970)
             var record = Data()
-            record.append(stamp.littleEndian)
-            record.append(UInt32((date.timeIntervalSince1970 - Double(stamp)) * 1_000_000).littleEndian)
-            record.append(UInt32(packet.count).littleEndian)
-            record.append(UInt32(packet.count).littleEndian)
+            record.appendLE(stamp.littleEndian)
+            record.appendLE(UInt32((date.timeIntervalSince1970 - Double(stamp)) * 1_000_000).littleEndian)
+            record.appendLE(UInt32(packet.count).littleEndian)
+            record.appendLE(UInt32(packet.count).littleEndian)
             record.append(packet)
             try? self.handle.write(contentsOf: record)
             self.packetCount += 1
@@ -60,5 +60,13 @@ final class PcapWriter {
         queue.sync {
             try? self.handle.synchronize()
         }
+    }
+}
+
+
+extension Data {
+    mutating func appendLE<T: FixedWidthInteger>(_ value: T) {
+        var raw = value.littleEndian
+        withUnsafeBytes(of: &raw) { append(contentsOf: $0) }
     }
 }
